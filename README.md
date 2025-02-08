@@ -12,9 +12,17 @@ Keep in mind but this more than just a set of utilities! It comes with complete,
 
 If you are just in hurry to flash your CCxxxx chip, follow this guide, however you should first check the [compatibility table](#compatibility-table) later in this document!
 
-### 1. Prepare your arduino board
+### 0. Prepare your esp8266 board(tested with New NODEMCUV3)
 
-1. Install the `Arduino/CCLib` library [to your arduino IDE](https://www.arduino.cc/en/Guide/Libraries)
+1. esp8266 works with 3.3V therefore it can be used directly. CC_DD_I and CC_DD_O should be connected together.
+2. Check if file CCLib_proxy.ino contain pin definitions for esp8266
+3. Import Arduino project CCLib_proxy.ino (tested with Arduino ide 2.3.4), then compile and upload
+
+
+### 1. Prepare your arduino board 
+
+0. Uncommend pinout for Arduino in file CCLib_proxy.ino
+1. Import project to arduino ide
 2. Load the `CCLib_proxy` example and change the the `LED`, `CC_RST`, `CC_DC`, `CC_DD_I` and `CC_DD_O` constants to match your configuration.
 3. Flash it to your Teensy/Arduino
 4. We are going to need a voltage divider from 5V (arduino) to 3.3V (CCxxxx chip), therefore you will need to wire your arduino according to the following diagram:
@@ -43,9 +51,9 @@ In an arduino/breadboard set-up, this looks like this:
 
 ### 2. Prepare your software
 
-1. You will need Python 2.7 or later installed to your system
+1. You will need Python 3(tested with 3.13.1) or later installed to your system
 2. Open a terminal and change directory into the `Python` folder of this project
-3. Install required python modules by typing: `pip install -r requirements.txt`
+3. Install required python modules by typing: `pip install -r requirements.txt`(tested with pyserial 3.5)
 4. Test your set-up:
 ```
 ~$ ./cc_info.py -p [serial port]
