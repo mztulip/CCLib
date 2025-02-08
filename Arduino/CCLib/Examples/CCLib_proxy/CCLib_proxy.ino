@@ -34,11 +34,11 @@
 ////////////////////////////////////////
 ////////////////////////////////////////
 
-// Pinout configuration (Configured for Arduino Leonardo)
-int CC_RST   = 5;
-int CC_DC    = 4;
-int CC_DD_I  = 3;
-int CC_DD_O  = 2;
+// Pinout configuration (Configured for ESP8266)
+int CC_RST   = 5; //D1
+int CC_DC    = 4; //D2
+int CC_DD_I  = 14; //D5
+int CC_DD_O  = 12; //D6
 
 // Change this if you are using an external led
 int LED      = LED_BUILTIN;
@@ -91,8 +91,9 @@ void setup() {
   dbg->setLED( LED, LED );
   
   // Initialize serial port
-  //Serial.begin(115200);
-  Serial.begin(9600);
+  Serial.begin(115200);
+  // Serial.begin(9600);
+
   
   // Wait for chip to initialize
   delay(100);
@@ -128,7 +129,6 @@ boolean handleError( ) {
  * Main program loop
  */
 void loop() {
-  
   // Wait for incoming data frame
   if (Serial.available() < 4)
     return;
@@ -138,9 +138,16 @@ void loop() {
       c1 = Serial.read();
       c2 = Serial.read();
       c3 = Serial.read();  
+
+  // Serial.print("\n\rDostalem: ");
+  // Serial.print(inByte, HEX);
+  // Serial.print(c1, HEX);
+  // Serial.print(c2, HEX);
+  // Serial.print(c3, HEX);
   
   // Handle commands
   if (inByte == CMD_PING) {
+    digitalWrite(LED, HIGH);
     sendFrame( ANS_OK );
     
   } else if (inByte == CMD_ENTER) {

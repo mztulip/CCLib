@@ -21,6 +21,7 @@ import time
 import glob
 import serial
 import serial.tools.list_ports
+import struct
 
 # Command constants
 CMD_ENTER     = 0x01
@@ -74,7 +75,6 @@ class CCLibProxy:
 			self.instructionTableVersion = parent.instructionTableVersion
 
 		else:
-
 			# If we don't have a port specified perform autodetect
 			if port is None or port == 'auto':
 				self.detectPort()
@@ -82,7 +82,7 @@ class CCLibProxy:
 			else:
 				# Open port
 				try:
-					self.ser = serial.Serial(port, baudrate=9600, timeout=3.0, write_timeout=3.0)
+					self.ser = serial.Serial(port, baudrate=115200, timeout=3.0, write_timeout=3.0)
 					self.port = port
 					time.sleep(3)
 				except:
@@ -91,7 +91,8 @@ class CCLibProxy:
 				# Ping
 				try:
 					self.ping()
-				except IOError:
+				except IOError as e:
+					print(e)
 					raise IOError("Could not find CCLib_proxy device on port %s" % self.ser.name)
 
 			# Check if we should enter debug mode
@@ -154,20 +155,30 @@ class CCLibProxy:
 		"""
 		Read and translate the 3-byte response frame from arduino
 		"""
+		# time.sleep(1)
+		# wb = self.ser.in_waiting
+		# print(f"Waiting bytes: {wb}")
+		# b = self.ser.read(wb)
+		# print(f"Message: {b} ")
 
-		# Read response frame
+		b = self.ser.read()
+		# print(f"First byte: {b}")
+		if len(b) == 0:
+			print("First response frame byte not received")
+			raise IOError("Could not read from the serial port!")
+		status = struct.unpack("B", b)[0]
 		b = self.ser.read()
 		if len(b) == 0:
+			print("Second response frame byte not received")
 			raise IOError("Could not read from the serial port!")
-		status = ord(b)
+	
+		bH = b
 		b = self.ser.read()
 		if len(b) == 0:
+			print("Third response frame byte not received")
 			raise IOError("Could not read from the serial port!")
-		bH = ord(b)
-		b = self.ser.read()
-		if len(b) == 0:
-			raise IOError("Could not read from the serial port!")
-		bL = ord(b)
+		bL = b
+
 
 		# Handle error responses
 		if status == ANS_ERROR:
@@ -179,7 +190,7 @@ class CCLibProxy:
 				elif bL == 0x03:
 					raise IOError("The chip is not responding. Check your connection and/or wiring!")
 				else:
-					raise IOError("CCDebugger responded with an error (0x%02x)" % bL)
+					raise IOError(f"CCDebugger responded with an error ({bl})")
 			else:
 				return -bL
 
@@ -192,17 +203,22 @@ class CCLibProxy:
 			else:
 				raise IOError("CCDebugger responded with an unknown status (0x%02x)" % status)
 
+		data_bytes = bL+bH
+		data = struct.unpack("<H", data_bytes)[0]
+		# print(f"data: {data}")
 		# Otherwise we are good
-		return (bH << 8) | bL
+		return data
 
 	def sendFrame(self, cmd, c1=0, c2=0, c3=0, raiseException=True ):
 		"""
 		Send the specified frame to the output queue
 		"""
-
 		# Send the 4-byte command frame
-		self.ser.write( chr(cmd)+chr(c1)+chr(c2)+chr(c3) )
+		frame_bytes = bytes([cmd, c1, c2, c3])
+		# print(f"Sending: {frame_bytes}")
+		self.ser.write(frame_bytes)
 		self.ser.flush()
+		# time.sleep(1)
 
 		# Read frame
 		return self.readFrame(raiseException)
@@ -215,7 +231,6 @@ class CCLibProxy:
 		"""
 		Send a PING frame
 		"""
-
 		# This will raise an exception on error
 		self.sendFrame(CMD_PING)
 		return True
