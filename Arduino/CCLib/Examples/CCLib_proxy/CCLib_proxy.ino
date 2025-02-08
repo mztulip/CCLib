@@ -34,6 +34,12 @@
 ////////////////////////////////////////
 ////////////////////////////////////////
 
+// Pinout configuration (Configured for Arduino Leonardo)
+int CC_RST   = 5;
+int CC_DC    = 4;
+int CC_DD_I  = 3;
+int CC_DD_O  = 2;
+
 // Pinout configuration (Configured for ESP8266)
 int CC_RST   = 5; //D1
 int CC_DC    = 4; //D2
